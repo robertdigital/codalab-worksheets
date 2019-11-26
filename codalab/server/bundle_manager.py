@@ -60,13 +60,12 @@ class BundleManager(object):
 
     def run(self, sleep_time):
         logger.info('Bundle manager running!')
-        while not self._is_exiting():
+        if not self._is_exiting():
             try:
+                self._run_stage_bundles_in_background(sleep_time)
                 self._run_iteration()
             except Exception:
                 traceback.print_exc()
-
-            time.sleep(sleep_time)
 
         while self._is_making_bundles():
             time.sleep(sleep_time)
@@ -80,10 +79,32 @@ class BundleManager(object):
             return self._exiting
 
     def _run_iteration(self):
-        self._stage_bundles()
-        self._make_bundles()
         self._schedule_run_bundles()
-        self._fail_unresponsive_bundles()
+
+    def _run_stage_bundles_in_background(self, sleep_time):
+        """
+        This function will run stage_bundles in background, so that it won't be blocked by _schedule_run_bundles().
+        All the newly submitted bundles will get into staged state once it's submitted
+        :param sleep_time: number of seconds to sleep
+        :return:
+        """
+
+        def run():
+            while True:
+                self._stage_bundles()
+                self._make_bundles()
+                self._fail_unresponsive_bundles()
+                time.sleep(sleep_time)
+
+        running_threads = [thread.getName() for thread in threading.enumerate()]
+        # Check if stage_bundles_thread is running in background. If stage_bundles_thread is crashed due to any reason,
+        # it will spawn a new one to move any qualified bundles from CREATED to STAGED state
+        if 'stage_bundles_thread' not in running_threads:
+            stage_bundles_thread = threading.Thread(
+                name='stage_bundles_thread', target=run, args=()
+            )
+            stage_bundles_thread.daemon = True
+            stage_bundles_thread.start()
 
     def _stage_bundles(self):
         """
@@ -154,8 +175,7 @@ class BundleManager(object):
             self._model.update_bundle(bundle, {'state': State.STAGED})
 
     def _make_bundles(self):
-        # Re-stage any stuck bundles. This would happen if the bundle manager
-        # died.
+        # Re-stage any stuck bundles. This would happen if the bundle manager died.
         for bundle in self._model.batch_get_bundles(state=State.MAKING, bundle_type='make'):
             if not self._is_making_bundle(bundle.uuid):
                 logger.info('Re-staging make bundle %s', bundle.uuid)
