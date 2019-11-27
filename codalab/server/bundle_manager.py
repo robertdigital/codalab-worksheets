@@ -88,7 +88,6 @@ class BundleManager(object):
         :param sleep_time: number of seconds to sleep
         :return:
         """
-
         def run():
             while True:
                 self._stage_bundles()
