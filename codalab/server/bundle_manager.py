@@ -740,7 +740,6 @@ class BundleManager(object):
                 # temporarily, we filter out those bundles so that they won't be dispatched to run on workers.
                 if bundle.uuid not in self._bundles_wo_matched_workers:
                     # TODO: update bundles with batch operation: implement function batch_update_bundles()
-                    s= time.time()
                     self._model.update_bundle(
                         bundle,
                         {
@@ -752,7 +751,6 @@ class BundleManager(object):
                             }
                         },
                     )
-                    logger.info("time query = {}".format(time.time() -s ))
                     self._bundles_wo_matched_workers.add(bundle.uuid)
             else:
                 # Remove the uuid in self._bundles_wo_matched_workers if a matched private worker is found in the system
