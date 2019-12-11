@@ -54,7 +54,7 @@ class BundleManager(object):
         self._make_uuids_lock = threading.Lock()
         self._make_uuids = set()
         # A set of UUID of bundles without their requested private worker discovered in the system
-        self._bundles_wo_matched_workers = set()
+        self._bundles_without_matched_workers = set()
 
         def parse(to_value, field):
             return to_value(config[field]) if field in config else None
@@ -738,7 +738,7 @@ class BundleManager(object):
             elif bundle.metadata.request_queue and len(matched_workers) == 0:
                 # For those bundles that were requested to run on a private worker, if the private worker does not exist
                 # temporarily, we filter out those bundles so that they won't be dispatched to run on workers.
-                if bundle.uuid not in self._bundles_wo_matched_workers:
+                if bundle.uuid not in self._bundles_without_matched_workers:
                     # TODO: update bundles with batch operation: implement function batch_update_bundles()
                     self._model.update_bundle(
                         bundle,
@@ -751,10 +751,10 @@ class BundleManager(object):
                             }
                         },
                     )
-                    self._bundles_wo_matched_workers.add(bundle.uuid)
+                    self._bundles_without_matched_workers.add(bundle.uuid)
             else:
-                # Remove the uuid in self._bundles_wo_matched_workers if a matched private worker is found in the system
-                if bundle.uuid in self._bundles_wo_matched_workers:
-                    self._bundles_wo_matched_workers.remove(bundle.uuid)
+                # Remove the uuid in self._bundles_without_matched_workers if a matched private worker is found in the system
+                if bundle.uuid in self._bundles_without_matched_workers:
+                    self._bundles_without_matched_workers.remove(bundle.uuid)
                 staged_bundles_to_run.append((bundle, bundle_resources))
         return staged_bundles_to_run
