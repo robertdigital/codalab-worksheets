@@ -27,7 +27,8 @@ BUNDLE_TIMEOUT_DAYS = 60
 # When using the REST api, it is allowed to set Memory to 0 but that means the container has unbounded
 # access to the host machine's memory, which we have decided to not allow
 MINIMUM_REQUEST_MEMORY_BYTES = 4 * 1024 * 1024
-# CodaLab public workers on both dev and prod environment
+# CodaLab public workers: a comma-separated list of worker ids to monitor.
+# Example: vm-clws-prod-worker-0,vm-clws-prod-worker-1
 CODALAB_PUBLIC_WORKERS = os.environ['CODALAB_PUBLIC_WORKERS'].split(',')
 
 
