@@ -388,10 +388,6 @@ class BundleManager(object):
         request_queue = bundle.metadata.request_queue
         if request_queue:
             workers_list = self._get_matched_workers(request_queue, workers_list)
-            # Technically this shouldn't happen any more as all the bundles that are specified to run on
-            # invalid private workers are filtered out in _get_staged_bundles_to_run()
-            if len(workers_list) == 0:
-                return []
 
         # Filter by CPUs.
         workers_list = [
@@ -743,6 +739,7 @@ class BundleManager(object):
                 # temporarily, we filter out those bundles so that they won't be dispatched to run on workers.
                 if bundle.uuid not in self._bundles_wo_matched_workers:
                     # TODO: update bundles with batch operation: implement function batch_update_bundles()
+                    s= time.time()
                     self._model.update_bundle(
                         bundle,
                         {
@@ -754,6 +751,7 @@ class BundleManager(object):
                             }
                         },
                     )
+                    logger.info("time query = {}".format(time.time() -s ))
                     self._bundles_wo_matched_workers.add(bundle.uuid)
             else:
                 # Remove the uuid in self._bundles_wo_matched_workers if a matched private worker is found in the system
