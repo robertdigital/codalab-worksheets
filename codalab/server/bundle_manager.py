@@ -27,8 +27,8 @@ BUNDLE_TIMEOUT_DAYS = 60
 # When using the REST api, it is allowed to set Memory to 0 but that means the container has unbounded
 # access to the host machine's memory, which we have decided to not allow
 MINIMUM_REQUEST_MEMORY_BYTES = 4 * 1024 * 1024
-# CodaLab public workers regex on both dev and prod environment
-CODALAB_PUBLIC_WORKER_REGEX = re.compile(r"^vm-clws-(prod|dev)-(worker|gpuworker)-(\d)$")
+# CodaLab public workers on both dev and prod environment
+CODALAB_PUBLIC_WORKERS = os.environ['CODALAB_PUBLIC_WORKERS'].split(',')
 
 
 class BundleManager(object):
@@ -333,7 +333,6 @@ class BundleManager(object):
         for bundle, bundle_resources in staged_bundles_to_run:
             # Get user_owned workers.
             workers_list = workers.user_owned_workers(bundle.owner_id)
-
             # If there is no user_owned worker, try to schedule the current bundle to run on a CodaLab's public worker.
             if not workers_list:
                 # Check if there is enough parallel run quota left for this user
@@ -716,15 +715,15 @@ class BundleManager(object):
                     pretty_print=formatting.size_str,
                 )
             )
-
             # Store a list of private workers that matches with the tag (specified by request_queue) requested from user
             matched_workers = []
             # Get a list of online private workers
             private_workers = [
                 worker
                 for worker in workers.workers()
-                if not CODALAB_PUBLIC_WORKER_REGEX.match(worker['worker_id'])
+                if not worker['worker_id'] in CODALAB_PUBLIC_WORKERS
             ]
+
             if bundle.metadata.request_queue:
                 request_queue = bundle.metadata.request_queue
                 matched_workers = self._get_matched_workers(request_queue, private_workers)
@@ -761,5 +760,4 @@ class BundleManager(object):
                 if bundle.uuid in self._bundles_wo_matched_workers:
                     self._bundles_wo_matched_workers.remove(bundle.uuid)
                 staged_bundles_to_run.append((bundle, bundle_resources))
-
         return staged_bundles_to_run
