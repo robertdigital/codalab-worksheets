@@ -814,12 +814,7 @@ class BundleModel(object):
             worker_run_row = {'user_id': user_id, 'worker_id': worker_id, 'run_uuid': bundle.uuid}
             connection.execute(cl_worker_run.insert().values(worker_run_row))
 
-        metadata = bundle.metadata.to_dict()
-        # Remove staged_status in metadata as the bundle is moved out from STAGED state
-        if 'staged_status' in metadata.keys():
-            del metadata['staged_status']
-
-        metadata = {
+        metadata_update = {
             'run_status': worker_run.run_status,
             'last_updated': int(time.time()),
             'time': worker_run.container_time_total,
@@ -829,9 +824,9 @@ class BundleModel(object):
         }
 
         if worker_run.docker_image is not None:
-            metadata['docker_image'] = worker_run.docker_image
+            metadata_update['docker_image'] = worker_run.docker_image
 
-        self.update_bundle(bundle, {'state': worker_run.state, 'metadata': metadata}, connection)
+        self.update_bundle(bundle, {'state': worker_run.state, 'metadata': metadata_update}, connection)
 
         return True
 

@@ -753,8 +753,14 @@ class BundleManager(object):
                     )
                     self._bundles_without_matched_workers.add(bundle.uuid)
             else:
-                # Remove the uuid in self._bundles_without_matched_workers if a matched private worker is found in the system
+                # Remove the uuid from self._bundles_without_matched_workers if a
+                # matched private worker is found in the system and update metadata
                 if bundle.uuid in self._bundles_without_matched_workers:
+                    metadata = bundle.metadata.to_dict()
+                    # Remove staged_status in metadata as the bundle is moved out from STAGED state
+                    if 'staged_status' in metadata.keys():
+                        del metadata['staged_status']
+                    self._model.update_bundle(bundle, {'metadata': metadata},)
                     self._bundles_without_matched_workers.remove(bundle.uuid)
                 staged_bundles_to_run.append((bundle, bundle_resources))
         return staged_bundles_to_run
