@@ -661,13 +661,14 @@ class BundleManager(object):
         staged_bundles_to_run = []
         for bundle in self._model.batch_get_bundles(state=State.STAGED, bundle_type='run'):
             bundle_resources = self._compute_bundle_resources(bundle)
-            failures = []
+            user_info = self._model.get_user_info(bundle.owner_id)
 
+            failures = []
             failures.append(
                 self._check_resource_failure(
                     bundle_resources.disk,
                     user_fail_string='Requested more disk (%s) than user disk quota left (%s)',
-                    user_max=self._model.get_user_disk_quota_left(bundle.owner_id),
+                    user_max=user_info['disk_quota'] - user_info['disk_used'],
                     global_fail_string='Maximum job disk size (%s) exceeded (%s)',
                     global_max=self._max_request_disk,
                     pretty_print=formatting.size_str,
@@ -678,7 +679,7 @@ class BundleManager(object):
                 self._check_resource_failure(
                     bundle_resources.time,
                     user_fail_string='Requested more time (%s) than user time quota left (%s)',
-                    user_max=self._model.get_user_time_quota_left(bundle.owner_id),
+                    user_max=user_info['time_quota'] - user_info['time_used'],
                     global_fail_string='Maximum job time (%s) exceeded (%s)',
                     global_max=self._max_request_time,
                     pretty_print=formatting.duration_str,
