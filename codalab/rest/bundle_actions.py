@@ -41,7 +41,7 @@ def create_bundle_actions():
             )
             local.model.update_bundle(bundle, {'metadata': {'actions': new_actions}})
         else:
-            # The state updates of bundles in CREATED, UPLOADING, or STAGED state
+            # The state updates of bundles in CREATED, UPLOADING, MAKING, STARTING or STAGED state
             # will be handled on the rest-server side.
             local.model.update_bundle(
                 bundle, {'state': State.KILLED, 'metadata': {'actions': new_actions}}
