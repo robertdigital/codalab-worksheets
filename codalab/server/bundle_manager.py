@@ -659,9 +659,17 @@ class BundleManager(object):
         """
         # Keep track of staged bundles that have valid resources requested
         staged_bundles_to_run = []
+        # A dictionary structured as {owner_id: user information} to track those visited user information
+        visited = {}
+
         for bundle in self._model.batch_get_bundles(state=State.STAGED, bundle_type='run'):
             bundle_resources = self._compute_bundle_resources(bundle)
-            user_info = self._model.get_user_info(bundle.owner_id)
+            # Cache those visited user information
+            if bundle.owner_id in visited.keys():
+                user_info = visited[bundle.owner_id]
+            else:
+                user_info = self._model.get_user_info(bundle.owner_id)
+                visited[bundle.owner_id] = user_info
 
             failures = []
             failures.append(
