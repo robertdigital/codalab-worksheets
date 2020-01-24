@@ -500,7 +500,7 @@ class BundleManager(object):
             return formatting.parse_size('2g')
         return formatting.parse_size(bundle.metadata.request_memory)
 
-    def _compute_request_disk(self, bundle, user_info):
+    def _compute_request_disk(self, bundle, user_info=None):
         """
         Compute the disk limit used for scheduling the run.
         The default is min(disk quota the user has left, global max)
@@ -511,7 +511,7 @@ class BundleManager(object):
             )
         return formatting.parse_size(bundle.metadata.request_disk)
 
-    def _compute_request_time(self, bundle, user_info):
+    def _compute_request_time(self, bundle, user_info=None):
         """
         Compute the time limit used for scheduling the run.
         The default is min(time quota the user has left, global max)
