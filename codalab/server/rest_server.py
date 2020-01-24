@@ -6,14 +6,14 @@ import sys
 import textwrap
 import traceback
 import logging
-
+import urllib.error
+import StringIO
 import bottle
 from bottle import (
     abort,
     Bottle,
     default_app,
     get,
-    HTTPError,
     HTTPResponse,
     install,
     JSONPlugin,
@@ -113,8 +113,15 @@ class ErrorAdapter(object):
                     message = "Unexpected Internal Error ({}). The administrators have been notified.".format(
                         message
                     )
-                raise HTTPError(code, message)
-
+                #raise HTTPError(code, message)
+                # Low-level httplib module doesn't throw HTTPError
+                raise urllib.error.HTTPError(
+                    self._base_url + path,
+                    response.status,
+                    response.reason,
+                    dict(response.getheaders()),
+                    StringIO(message),
+                )
         return wrapper
 
     @staticmethod
